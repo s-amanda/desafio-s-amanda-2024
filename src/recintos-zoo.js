@@ -4,7 +4,7 @@ const recintos = [
         bioma: ["savana"],
         tamanhoTotal: 10,
         animaisExistentes: 3,
-        animal: "macaco",
+        animal: "MACACO",
     },
     {
         numero: 2,
@@ -18,7 +18,7 @@ const recintos = [
         bioma: ["savana", "rio"],
         tamanhoTotal: 7,
         animaisExistentes: 1,
-        animal: "gazela",
+        animal: "GAZELA",
     },
     {
         numero: 4,
@@ -32,17 +32,17 @@ const recintos = [
         bioma: ["savana"],
         tamanhoTotal: 9,
         animaisExistentes: 1,
-        animal: "leao",
+        animal: "LEAO",
     },
 ];
 
 const animais = [
-    { especie: "leao", espaco: 3, bioma: ["savana"], carnivoro: true },
-    { especie: "leopardo", espaco: 2, bioma: ["savana"], carnivoro: true },
-    { especie: "crocodilo", espaco: 3, bioma: ["rio"], carnivoro: true },
-    { especie: "macaco", espaco: 1, bioma: ["savana", "floresta"], carnivoro: false },
-    { especie: "gazela", espaco: 2, bioma: ["savana"], carnivoro: false },
-    { especie: "hipopotamo", espaco: 4, bioma: ["savana", "rio"], carnivoro: false },
+    { especie: "LEAO", espaco: 3, bioma: ["savana"], carnivoro: true },
+    { especie: "LEOPARDO", espaco: 2, bioma: ["savana"], carnivoro: true },
+    { especie: "CROCODILO", espaco: 3, bioma: ["rio"], carnivoro: true },
+    { especie: "MACACO", espaco: 1, bioma: ["savana", "floresta"], carnivoro: false },
+    { especie: "GAZELA", espaco: 2, bioma: ["savana"], carnivoro: false },
+    { especie: "HIPOPOTAMO", espaco: 4, bioma: ["savana", "rio"], carnivoro: false },
 ];
 
 function getAnimal(especie) {
@@ -52,7 +52,7 @@ function getAnimal(especie) {
 function calculaEspacoLivre(recinto) {
     const animalExistente = getAnimal(recinto.animal);
 
-    const espacoOcupado = animalExistente.espaco * recinto.animaisExistentes;
+    const espacoOcupado = animalExistente ? animalExistente.espaco * recinto.animaisExistentes : 0;
     return recinto.tamanhoTotal - espacoOcupado;
 }
 
@@ -62,9 +62,10 @@ function calculaEspacoNecessario(novoAnimal, quantidade, recinto) {
     let tamanhoNovoAnimal = quantidade * novoAnimal.espaco;
 
     // Quando há mais de uma espécie no mesmo recinto, é preciso considerar 1 espaço extra ocupado
-    if (animalExistente.especie != novoAnimal.especie) {
+    if (animalExistente && animalExistente.especie != novoAnimal.especie) {
         tamanhoNovoAnimal += 1
     }
+    return tamanhoNovoAnimal;
 }
 
 
@@ -97,40 +98,39 @@ class RecintosZoo {
             const animalExistente = getAnimal(recinto.animal);
             const espacoLivre = calculaEspacoLivre(recinto);
 
-            const espacoNecessario = calculaEspacoNecessario(animal, quantidade, recinto);
+            const espacoNecessario = calculaEspacoNecessario(novoAnimal, quantidade, recinto);
 
             if (espacoNecessario > espacoLivre) {
                 return false;
             }
 
             // Animais carnívoros devem habitar somente com a própria espécie
-            if (novoAnimal.carnivoro) {
-                if (animalExistente.especie !== novoAnimal.especie)
-                    return false;
+            if (animalExistente && novoAnimal.carnivoro != animalExistente.carnivoro) {
+                return false;
             }
 
             // Hipopótamo(s) só tolera(m) outras espécies estando num recinto com savana e rio
-            if (novoAnimal.especie === 'hipopotamo' && animalExistente.especie !== 'hipopotamo') {
+            if (novoAnimal.especie === 'HIPOPOTAMO' && animalExistente?.especie !== 'HIPOPOTAMO') {
                 if (!recinto.bioma.includes('savana') && !recinto.bioma.includes('rio')) {
                     return false;
                 }
             }
 
             // Um macaco não se sente confortável sem outro animal no recinto, seja da mesma ou outra espécie
-            if (novoAnimal.especie === 'macaco') {
-                if (!animalExistente) {
+            if (novoAnimal.especie === 'MACACO') {
+                if (quantidade === 1 && !animalExistente) {
                     return false;
                 }
             }
             return true;
 
         })
-        if (!recintosViaveis) {
+        if (!recintosViaveis.length) {
             return { erro: 'Não há recinto viável' };
         }
 
         const listaDeRecintos = recintosViaveis.map((recinto) => {
-            const espacoLivre = calculaEspacoLivre(recinto) - calculaEspacoNecessario(nomeAnimal, quantidade, recinto);
+            const espacoLivre = calculaEspacoLivre(recinto) - calculaEspacoNecessario(novoAnimal, quantidade, recinto);
             return `Recinto ${recinto.numero} (espaço livre: ${espacoLivre} total: ${recinto.tamanhoTotal})`;
         })
 
