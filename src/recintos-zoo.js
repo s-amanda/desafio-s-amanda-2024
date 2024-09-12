@@ -68,6 +68,24 @@ function calculaEspacoNecessario(novoAnimal, quantidade, recinto) {
     return tamanhoNovoAnimal;
 }
 
+function validaBiomaCompativel(recinto, novoAnimal) {
+    let biomaCompativel = false;
+    novoAnimal.bioma.forEach((biomaAnimal) => {
+        if (recinto.bioma.includes(biomaAnimal)) {
+            biomaCompativel = true;
+        }
+    })
+
+    return biomaCompativel;
+}
+
+function validaEspacoDisponivel(novoAnimal, quantidade, recinto) {
+    const espacoLivre = calculaEspacoLivre(recinto);
+    const espacoNecessario = calculaEspacoNecessario(novoAnimal, quantidade, recinto);
+
+    return espacoNecessario <= espacoLivre;
+}
+
 
 class RecintosZoo {
     analisaRecintos(nomeAnimal, quantidade) {
@@ -83,26 +101,20 @@ class RecintosZoo {
 
         const recintosViaveis = recintos.filter((recinto) => {
             // Um animal se sente confortável se está num bioma adequado e com espaço suficiente para cada indivíduo
-            let biomaCompativel = false;
-            novoAnimal.bioma.forEach((biomaAnimal) => {
-                if (recinto.bioma.includes(biomaAnimal)) {
-                    biomaCompativel = true;
-                }
-            })
+            const biomaCompativel = validaBiomaCompativel(recinto, novoAnimal);
 
             if (!biomaCompativel) {
                 return false;
             }
 
             // Animais já presentes no recinto devem continuar confortáveis com a inclusão do(s) novo(s)
-            const animalExistente = getAnimal(recinto.animal);
-            const espacoLivre = calculaEspacoLivre(recinto);
+            const espacoDisponivel = validaEspacoDisponivel(novoAnimal, quantidade, recinto)
 
-            const espacoNecessario = calculaEspacoNecessario(novoAnimal, quantidade, recinto);
-
-            if (espacoNecessario > espacoLivre) {
+            if (!espacoDisponivel) {
                 return false;
             }
+
+            const animalExistente = getAnimal(recinto.animal);
 
             // Animais carnívoros devem habitar somente com a própria espécie
             if (animalExistente && novoAnimal.carnivoro != animalExistente.carnivoro) {
